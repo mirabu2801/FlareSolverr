@@ -5,6 +5,7 @@ import time
 from datetime import timedelta
 from urllib.parse import unquote
 
+import bs4
 from func_timeout import FunctionTimedOut, func_timeout
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -94,18 +95,28 @@ def controller_v1_endpoint(req: V1RequestBase) -> V1ResponseBase:
     res: V1ResponseBase
     try:
         res = _controller_v1_handler(req)
+        data = bs4.BeautifulSoup(res.solution.response, 'html.parser')
+        tg_icon = data.select('.fa-telegram')
+        if tg_icon:
+            tg_icon = tg_icon[0]
+            tg_link = tg_icon.parent.parent
+            res.solution = tg_link.attrs['href'].replace('https://t.me/', '')
+        else:
+            res.solution = ''
     except Exception as e:
         res = V1ResponseBase({})
         res.__error_500__ = True
         res.status = STATUS_ERROR
         res.message = "Error: " + str(e)
         logging.error(res.message)
+        res.solution = ''
 
     res.startTimestamp = start_ts
     res.endTimestamp = int(time.time() * 1000)
     res.version = utils.get_flaresolverr_version()
     logging.debug(f"Response => POST /v1 body: {utils.object_to_dict(res)}")
     logging.info(f"Response in {(res.endTimestamp - res.startTimestamp) / 1000} s")
+
     return res
 
 
@@ -136,6 +147,7 @@ def _controller_v1_handler(req: V1RequestBase) -> V1ResponseBase:
         res = _cmd_request_post(req)
     else:
         raise Exception(f"Request parameter 'cmd' = '{req.cmd}' is invalid.")
+
 
     return res
 
@@ -395,6 +407,8 @@ def _evil_logic(req: V1RequestBase, driver: WebDriver, method: str) -> Challenge
     challenge_res.userAgent = utils.get_user_agent(driver)
 
     if not req.returnOnlyCookies:
+        import time
+        time.sleep(20)
         challenge_res.headers = {}  # todo: fix, selenium not provides this info
         challenge_res.response = driver.page_source
 
