@@ -100,7 +100,11 @@ def controller_v1_endpoint(req: V1RequestBase) -> V1ResponseBase:
         if tg_icon:
             tg_icon = tg_icon[0]
             tg_link = tg_icon.parent.parent
-            res.solution = tg_link.attrs['href'].replace('https://t.me/', '')
+            if not tg_link.attrs.get('href'):
+                logging.info("Telegram link not found", tg_icon.__dict__)
+                res.solution = ''
+            else:
+                res.solution = tg_link.attrs['href'].replace('https://t.me/', '')
         else:
             res.solution = ''
     except Exception as e:
