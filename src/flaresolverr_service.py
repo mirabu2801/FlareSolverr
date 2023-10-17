@@ -95,18 +95,18 @@ def controller_v1_endpoint(req: V1RequestBase) -> V1ResponseBase:
     res: V1ResponseBase
     try:
         res = _controller_v1_handler(req)
-        data = bs4.BeautifulSoup(res.solution.response, 'html.parser')
-        tg_icon = data.select('.fa-telegram')
-        if tg_icon:
-            tg_icon = tg_icon[0]
-            tg_link = tg_icon.parent.parent
-            if not tg_link.attrs.get('href'):
-                logging.info("Telegram link not found", tg_icon.__dict__)
-                res.solution = ''
-            else:
-                res.solution = tg_link.attrs['href'].replace('https://t.me/', '')
-        else:
-            res.solution = ''
+#         data = bs4.BeautifulSoup(res.solution.response, 'html.parser')
+#         tg_icon = data.select('.fa-telegram')
+#         if tg_icon:
+#             tg_icon = tg_icon[0]
+#             tg_link = tg_icon.parent.parent
+#             if not tg_link.attrs.get('href'):
+#                 logging.info("Telegram link not found", tg_icon.__dict__)
+#                 res.solution = ''
+#             else:
+#                 res.solution = tg_link.attrs['href'].replace('https://t.me/', '')
+#         else:
+#             res.solution = ''
     except Exception as e:
         res = V1ResponseBase({})
         res.__error_500__ = True
